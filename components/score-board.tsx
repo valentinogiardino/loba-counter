@@ -192,13 +192,13 @@ export function ScoreBoard({
                 <div>
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {players.length === 0
-                      ? "¡Comienza una nueva partida!"
-                      : "¡Necesitas más jugadores!"}
+                      ? "¡Comenzá una nueva partida!"
+                      : "¡Che, falta gente para jugar!"}
                   </h3>
                   <p className="text-white/70">
                     {players.length === 0
-                      ? "Agrega jugadores para comenzar una nueva partida"
-                      : "Agrega al menos un jugador más para comenzar la partida"}
+                      ? "Sumá jugadores para empezar"
+                      : "Meté al menos un jugador más para arrancar la partida"}
                   </p>
                 </div>
               </div>

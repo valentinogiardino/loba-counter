@@ -31,7 +31,7 @@ export function PlayerForm({ addPlayer }: PlayerFormProps) {
           type="submit"
           className="bg-green-600 hover:bg-green-700 text-white h-10 sm:h-11 text-base sm:text-lg whitespace-nowrap"
         >
-          Añadir
+          Agregar
         </Button>
       </form>
     </div>
