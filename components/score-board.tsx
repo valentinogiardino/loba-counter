@@ -48,9 +48,13 @@ export function ScoreBoard({ players, submitScore, deletePlayer, resetGame }: Sc
       submitScore(index, parseInt(points[index]) || 0)
     })
     setPoints(new Array(players.length).fill(''))
-    const nextInput = document.querySelector(`input[name="points-0"]`) as HTMLInputElement;
-    if (nextInput) {
-      nextInput.focus();
+    
+    // Only focus on desktop
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      const nextInput = document.querySelector(`input[name="points-0"]`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
     }
   }
 
@@ -62,14 +66,17 @@ export function ScoreBoard({ players, submitScore, deletePlayer, resetGame }: Sc
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, currentIndex: number) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const nextInput = document.querySelector(`input[name="points-${currentIndex + 1}"]`) as HTMLInputElement;
-      if (nextInput) {
-        nextInput.focus();
-      } else {
-        // If it's the last input, move focus to the submit button
-        const submitButton = document.querySelector('button[id="submit-round"]') as HTMLButtonElement;
-        if (submitButton) {
-          submitButton.focus();
+      // Only focus on desktop
+      if (window.matchMedia('(min-width: 768px)').matches) {
+        const nextInput = document.querySelector(`input[name="points-${currentIndex + 1}"]`) as HTMLInputElement;
+        if (nextInput) {
+          nextInput.focus();
+        } else {
+          // If it's the last input, move focus to the submit button
+          const submitButton = document.querySelector('button[id="submit-round"]') as HTMLButtonElement;
+          if (submitButton) {
+            submitButton.focus();
+          }
         }
       }
     }
