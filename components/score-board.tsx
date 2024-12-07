@@ -151,7 +151,7 @@ export function ScoreBoard({
                           onChange={(e) => handlePointChange(index, e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           placeholder="0"
-                          className="w-10 sm:w-12 h-8 sm:h-10 text-sm sm:text-base text-center bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-12 h-8 sm:h-10 text-sm sm:text-base text-center bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                       <Button
