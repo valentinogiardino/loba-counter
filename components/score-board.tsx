@@ -215,7 +215,7 @@ export function ScoreBoard({
       )}
       {players.length <= 1 && (
         <div className="text-white text-center p-8">
-          Agrega jugadores para empezar la partida
+          Agrega al menos 2 jugadores para empezar la partida
         </div>
       )}
     </>
