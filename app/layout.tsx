@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Contador Lova",
-  description: "Contador de puntos para la Lova",
+  title: "Contador Loba",
+  description: "Contador de puntos para la Loba",
 };
 
 export default function RootLayout({

@@ -81,7 +81,7 @@ export default function Game() {
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
         <div className="text-center space-y-4 sm:space-y-6 md:space-y-8 mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-glow animate-fade-in">
-            Contador de Lova
+            Contador de Loba
           </h1>
           <div className="flex justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 animate-fade-in delay-200">
             {cardSuits.map((suit, index) => (
