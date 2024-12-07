@@ -103,7 +103,7 @@ export function ScoreBoard({
       {players.length >= 1 && (
         <div className="space-y-4">
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {players.map((player, index) => (
                 <Card
                   key={index}
@@ -113,24 +113,24 @@ export function ScoreBoard({
                       : "bg-white/10 border-white/20"
                   }`}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-2">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         onClick={() => deletePlayer(index)}
-                        className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+                        className="h-8 w-8 sm:h-10 sm:w-10 bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
                       >
-                        <Trash2 className="h-4 w-4 text-white" />
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                       </Button>
-                      <div className="w-16 text-center">
-                        <span className="text-lg font-semibold text-white">
+                      <div className="w-12 sm:w-16 text-center">
+                        <span className="text-base sm:text-lg font-semibold text-white">
                           {player.roundTotal || 0}
                         </span>
                       </div>
-                      <div className="flex-grow">
-                        <span className="text-lg font-semibold text-white">
+                      <div className="flex-grow min-w-0">
+                        <span className="text-base sm:text-lg font-semibold text-white block truncate">
                           {player.name}
                         </span>
                       </div>
@@ -139,21 +139,19 @@ export function ScoreBoard({
                         variant="outline"
                         size="icon"
                         onClick={() => adjustPoints(index, -1)}
-                        className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+                        className="h-8 w-8 sm:h-10 sm:w-10 bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
                       >
-                        <Minus className="h-4 w-4 text-white" />
+                        <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                       </Button>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <Input
                           type="number"
                           name={`points-${index}`}
                           value={points[index] || ""}
-                          onChange={(e) =>
-                            handlePointChange(index, e.target.value)
-                          }
+                          onChange={(e) => handlePointChange(index, e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           placeholder="0"
-                          className="w-12 bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-10 sm:w-12 h-8 sm:h-10 text-sm sm:text-base text-center bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                       <Button
@@ -161,9 +159,9 @@ export function ScoreBoard({
                         variant="outline"
                         size="icon"
                         onClick={() => adjustPoints(index, 1)}
-                        className="bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
+                        className="h-8 w-8 sm:h-10 sm:w-10 bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
                       >
-                        <Plus className="h-4 w-4 text-white" />
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                       </Button>
                     </div>
                   </CardContent>

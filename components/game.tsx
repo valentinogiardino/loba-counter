@@ -63,20 +63,44 @@ export default function Game() {
     setPlayers(newPlayers);
   }
 
+  const cardSuits = [
+    { symbol: '♥️', color: 'text-red-500' },
+    { symbol: '♣️', color: 'text-black' },
+    { symbol: '♦️', color: 'text-red-500' },
+    { symbol: '♠️', color: 'text-black' },
+  ] as const;
+
   globalStyles()
 
   return (
-    <div className="min-h-screen bg-[#1b4d1b]">
-      <div className="container mx-auto p-4">
-        <h1 className="text-4xl font-bold mb-6 text-white text-center">Contador de Lova</h1>
+    <div className="min-h-screen bg-[#1b4d1b] bg-gradient-to-b from-[#1b4d1b] to-[#0f290f]">
+      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
+        <div className="text-center space-y-4 sm:space-y-6 md:space-y-8 mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-glow animate-fade-in">
+            Contador de Lova
+          </h1>
+          <div className="flex justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 animate-fade-in delay-200">
+            {cardSuits.map((suit, index) => (
+              <span
+                key={index}
+                className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl transform hover:scale-125 transition-transform duration-200 ${suit.color}`}
+              >
+                {suit.symbol}
+              </span>
+            ))}
+          </div>
+          <p className="text-green-300 text-sm sm:text-base md:text-lg lg:text-xl italic animate-fade-in delay-300 font-medium">
+            La suerte está echada...
+          </p>
+        </div>
         {!gameOver ? (
           <div className="space-y-6">
             <PlayerForm addPlayer={addPlayer} />
             <ScoreBoard 
               players={players} 
               submitScore={submitScore} 
-              deletePlayer={deletePlayer} 
-              resetGame={resetGame} 
+              deletePlayer={deletePlayer}
+              resetGame={resetGame}
             />
           </div>
         ) : (
@@ -84,11 +108,10 @@ export default function Game() {
             winner={winner} 
             players={players} 
             resetGame={resetGame} 
-            returnToGame={returnToGame} 
+            returnToGame={returnToGame}
           />
         )}
       </div>
     </div>
   )
 }
-
