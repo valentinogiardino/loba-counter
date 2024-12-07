@@ -29,9 +29,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <main className="flex-grow">{children}</main>
-        <footer className="text-center p-4 text-white/70  bg-[#133f13]">
+        <footer className="text-center p-4 text-white/70 bg-[#133f13]">
           <p className="text-sm font-medium">
-            Created by{" "}
+            © {new Date().getFullYear()} · Creado por{" "}
             <a
               href="https://github.com/valentinogiardino"
               target="_blank"
