@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlayerForm } from "./player-form";
 import { ScoreBoard } from "./score-board";
 import { GameOver } from "./game-over";
@@ -14,12 +14,47 @@ interface Player {
   roundTotal: number;
 }
 
+const STORAGE_KEY = "loba-counter-state";
+
 export default function Game() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const { width, height } = useWindowSize();
+
+  // Load state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.players) setPlayers(parsed.players);
+        if (parsed.gameOver !== undefined) setGameOver(parsed.gameOver);
+        if (parsed.winner) setWinner(parsed.winner);
+      }
+    } catch (error) {
+      console.error("Error loading state from localStorage:", error);
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      const stateToSave = {
+        players,
+        gameOver,
+        winner,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (error) {
+      console.error("Error saving state to localStorage:", error);
+    }
+  }, [players, gameOver, winner, isHydrated]);
 
   const addPlayer = (name: string) => {
     setPlayers([...players, { name, score: 0, roundTotal: 0 }]);
@@ -56,6 +91,11 @@ export default function Game() {
     setPlayers([]);
     setGameOver(false);
     setWinner(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error("Error clearing localStorage:", error);
+    }
   };
 
   const returnToGame = () => {
