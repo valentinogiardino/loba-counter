@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import Link from "next/link";
 import { Menu, Megaphone, BarChart3, Home } from "lucide-react";
+import { PreviewBadge } from "./preview-badge";
 
 interface GameSettings {
   allowRejoin: boolean;
@@ -100,7 +101,8 @@ export function SidebarMenu() {
                   className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
                 >
                   <BarChart3 className="h-4 w-4 mr-3" />
-                  Estadísticas
+                  <span className="flex-1 text-left">Estadísticas</span>
+                  <PreviewBadge />
                 </Button>
               </Link>
             </nav>
