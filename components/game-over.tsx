@@ -6,10 +6,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Trophy, ArrowLeft, RotateCcw, Users } from 'lucide-react'
 
 interface Player {
+  id: string
   name: string
   score: number
-  rejoinCount?: number
-  isEliminated?: boolean
+  roundTotal: number
+  rejoinCount: number
+  isEliminated: boolean
+  rejoinedThisRound: boolean
 }
 
 interface GameOverProps {
@@ -49,18 +52,25 @@ export function GameOver({ winner, players, resetGame, returnToGame, restartWith
             Puntuaciones finales:
           </h3>
           <ul className="space-y-2 sm:space-y-3">
-            {sortedPlayers.map((player, index) => (
+            {sortedPlayers.map((player) => (
               <li 
-                key={index} 
+                key={player.id} 
                 className={`p-2 sm:p-3 rounded-lg transition-all duration-200 ${
-                  player === winner 
+                  player.id === winner?.id 
                     ? 'bg-green-500/20 text-green-400 font-bold scale-105' 
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                <span className="text-base sm:text-lg break-words">
-                  {player.name}: {player.score} puntos
-                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-base sm:text-lg break-words">
+                    {player.name}: {player.score} puntos
+                  </span>
+                  {player.rejoinCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-amber-500/80 text-white rounded-full">
+                      {player.rejoinCount}x
+                    </span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

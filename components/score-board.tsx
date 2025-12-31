@@ -16,16 +16,18 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface Player {
+  id: string;
   name: string;
   score: number;
   roundTotal: number;
   rejoinCount: number;
   isEliminated: boolean;
+  rejoinedThisRound: boolean;
 }
 
 interface ScoreBoardProps {
   players: Player[];
-  submitScore: (index: number, points: number) => void;
+  submitRound: (pointsArray: number[]) => void;
   deletePlayer: (index: number) => void;
   resetGame: () => void;
   rejoinPlayer: (index: number) => void;
@@ -34,7 +36,7 @@ interface ScoreBoardProps {
 
 export function ScoreBoard({
   players,
-  submitScore,
+  submitRound,
   deletePlayer,
   resetGame,
   rejoinPlayer,
@@ -57,9 +59,11 @@ export function ScoreBoard({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    players.forEach((_, index) => {
-      submitScore(index, parseInt(points[index]) || 0);
-    });
+    
+    // Collect all scores and submit as a single round
+    const allScores = players.map((_, index) => parseInt(points[index]) || 0);
+    submitRound(allScores);
+    
     setPoints(new Array(players.length).fill(""));
 
     // Only focus on desktop
@@ -111,7 +115,7 @@ export function ScoreBoard({
           <div className="space-y-3 sm:space-y-4">
             {players.map((player, index) => (
               <Card
-                key={index}
+                key={player.id}
                 className={`backdrop-blur-sm ${
                   player.isEliminated
                     ? "bg-red-500/10 border-red-500"

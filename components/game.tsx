@@ -8,13 +8,41 @@ import { SettingsModal } from "./settings-modal";
 import { globalStyles } from "./global-styles";
 import Confetti from "react-confetti";
 import useWindowSize from "react-use/lib/useWindowSize";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { BarChart3 } from "lucide-react";
 
 interface Player {
+  id: string;
   name: string;
   score: number;
   roundTotal: number;
   rejoinCount: number;
   isEliminated: boolean;
+  rejoinedThisRound: boolean;
+}
+
+interface RoundScore {
+  playerId: string;
+  roundScore: number;
+  totalAfterRound: number;
+  eliminatedThisRound: boolean;
+  rejoinedThisRound: boolean;
+}
+
+interface Round {
+  roundNumber: number;
+  scores: RoundScore[];
+  timestamp: number;
+}
+
+interface Match {
+  id: string;
+  players: Player[];
+  rounds: Round[];
+  winnerPlayerId: string | null;
+  startedAt: number;
+  finishedAt: number | null;
 }
 
 interface GameSettings {
@@ -24,6 +52,7 @@ interface GameSettings {
 
 const STORAGE_KEY = "loba-counter-state";
 const SETTINGS_KEY = "loba-counter-settings";
+const HISTORY_KEY = "loba-counter-history";
 
 const DEFAULT_SETTINGS: GameSettings = {
   allowRejoin: true,
@@ -37,6 +66,12 @@ export default function Game() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
   const [lastPlayers, setLastPlayers] = useState<Player[]>([]);
+  
+  // Analytics state
+  const [matchId, setMatchId] = useState<string | null>(null);
+  const [matchStartedAt, setMatchStartedAt] = useState<number | null>(null);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [matchHistory, setMatchHistory] = useState<Match[]>([]);
 
   const { width, height } = useWindowSize();
 
@@ -50,11 +85,19 @@ export default function Game() {
         if (parsed.gameOver !== undefined) setGameOver(parsed.gameOver);
         if (parsed.winner) setWinner(parsed.winner);
         if (parsed.lastPlayers) setLastPlayers(parsed.lastPlayers);
+        if (parsed.matchId) setMatchId(parsed.matchId);
+        if (parsed.matchStartedAt) setMatchStartedAt(parsed.matchStartedAt);
+        if (parsed.rounds) setRounds(parsed.rounds);
       }
       const savedSettings = localStorage.getItem(SETTINGS_KEY);
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings);
         setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
+      }
+      const savedHistory = localStorage.getItem(HISTORY_KEY);
+      if (savedHistory) {
+        const parsedHistory = JSON.parse(savedHistory);
+        if (Array.isArray(parsedHistory)) setMatchHistory(parsedHistory);
       }
     } catch (error) {
       console.error("Error loading state from localStorage:", error);
@@ -72,12 +115,25 @@ export default function Game() {
         gameOver,
         winner,
         lastPlayers,
+        matchId,
+        matchStartedAt,
+        rounds,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
       console.error("Error saving state to localStorage:", error);
     }
-  }, [players, gameOver, winner, lastPlayers, isHydrated]);
+  }, [players, gameOver, winner, lastPlayers, matchId, matchStartedAt, rounds, isHydrated]);
+
+  // Save match history to localStorage whenever it changes
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(matchHistory));
+    } catch (error) {
+      console.error("Error saving match history to localStorage:", error);
+    }
+  }, [matchHistory, isHydrated]);
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
@@ -90,34 +146,96 @@ export default function Game() {
   }, [settings, isHydrated]);
 
   const addPlayer = (name: string) => {
-    setPlayers([...players, { name, score: 0, roundTotal: 0, rejoinCount: 0, isEliminated: false }]);
+    // Initialize match metadata when first player is added
+    if (players.length === 0) {
+      setMatchId(crypto.randomUUID());
+      setMatchStartedAt(Date.now());
+      setRounds([]);
+    }
+    
+    const newPlayer: Player = {
+      id: crypto.randomUUID(),
+      name,
+      score: 0,
+      roundTotal: 0,
+      rejoinCount: 0,
+      isEliminated: false,
+      rejoinedThisRound: false,
+    };
+    setPlayers([...players, newPlayer]);
   };
 
-  const submitScore = (index: number, points: number) => {
+  const submitRound = (pointsArray: number[]) => {
     const newPlayers = [...players];
-    newPlayers[index].score += points;
-    newPlayers[index].roundTotal += points;
+    const previousEliminationStatus = newPlayers.map(p => p.isEliminated);
+    
+    // Update all player scores
+    newPlayers.forEach((player, index) => {
+      const points = pointsArray[index] || 0;
+      player.score += points;
+      player.roundTotal += points;
+    });
 
     // Mark players as eliminated if they exceed 100
     newPlayers.forEach((player) => {
       player.isEliminated = player.score >= 101;
     });
 
+    // Record the round for analytics
+    const roundScores: RoundScore[] = newPlayers.map((player, index) => ({
+      playerId: player.id,
+      roundScore: pointsArray[index] || 0,
+      totalAfterRound: player.score,
+      eliminatedThisRound: !previousEliminationStatus[index] && player.isEliminated,
+      rejoinedThisRound: player.rejoinedThisRound,
+    }));
+
+    const newRound: Round = {
+      roundNumber: rounds.length + 1,
+      scores: roundScores,
+      timestamp: Date.now(),
+    };
+
+    setRounds([...rounds, newRound]);
+
+    // Reset rejoinedThisRound flags after recording
+    newPlayers.forEach((player) => {
+      player.rejoinedThisRound = false;
+    });
+
     // Check if only one player remains with a score less than 101
     const remainingPlayers = newPlayers.filter((player) => !player.isEliminated);
+    let gameEnded = false;
+    let matchWinner: Player | null = null;
 
     if (remainingPlayers.length === 1) {
-      setGameOver(true);
-      setWinner(remainingPlayers[0]);
+      gameEnded = true;
+      matchWinner = remainingPlayers[0];
     } else if (remainingPlayers.length === 0) {
       // If no players are below 101, the winner is the player with the lowest score
-      const winner = newPlayers.reduce((prev, current) =>
+      gameEnded = true;
+      matchWinner = newPlayers.reduce((prev, current) =>
         prev.score < current.score ? prev : current
       );
+    }
+
+    if (gameEnded && matchWinner) {
       setGameOver(true);
-      setWinner(winner);
+      setWinner(matchWinner);
+      
+      // Save completed match to history
+      if (matchId && matchStartedAt) {
+        const completedMatch: Match = {
+          id: matchId,
+          players: newPlayers,
+          rounds: [...rounds, newRound],
+          winnerPlayerId: matchWinner.id,
+          startedAt: matchStartedAt,
+          finishedAt: Date.now(),
+        };
+        setMatchHistory([...matchHistory, completedMatch]);
+      }
     } else {
-      // If there are still multiple players below 101, ensure game is not over
       setGameOver(false);
       setWinner(null);
     }
@@ -132,18 +250,28 @@ export default function Game() {
     }
 
     if (keepPlayers) {
-      // Reset scores but keep player names
+      // Reset scores but keep player names, generate new IDs for new match
       const resetPlayers = players.map((player) => ({
         ...player,
+        id: crypto.randomUUID(),
         score: 0,
         roundTotal: 0,
         rejoinCount: 0,
         isEliminated: false,
+        rejoinedThisRound: false,
       }));
       setPlayers(resetPlayers);
+      // Start new match
+      setMatchId(crypto.randomUUID());
+      setMatchStartedAt(Date.now());
     } else {
       setPlayers([]);
+      setMatchId(null);
+      setMatchStartedAt(null);
     }
+    
+    // Clear rounds for new match
+    setRounds([]);
     setGameOver(false);
     setWinner(null);
   };
@@ -151,13 +279,19 @@ export default function Game() {
   const restartWithSamePlayers = () => {
     if (lastPlayers.length > 0) {
       const resetPlayers = lastPlayers.map((player) => ({
+        id: crypto.randomUUID(),
         name: player.name,
         score: 0,
         roundTotal: 0,
         rejoinCount: 0,
         isEliminated: false,
+        rejoinedThisRound: false,
       }));
       setPlayers(resetPlayers);
+      // Start new match
+      setMatchId(crypto.randomUUID());
+      setMatchStartedAt(Date.now());
+      setRounds([]);
       setGameOver(false);
       setWinner(null);
     }
@@ -200,6 +334,7 @@ export default function Game() {
     // Update player status
     playerToRejoin.rejoinCount += 1;
     playerToRejoin.isEliminated = false;
+    playerToRejoin.rejoinedThisRound = true;
 
     // Re-check game state since we may have more active players now
     const remainingPlayers = newPlayers.filter((p) => !p.isEliminated);
@@ -223,8 +358,18 @@ export default function Game() {
   return (
     <div className="min-h-screen bg-[#1b4d1b] bg-gradient-to-b from-[#1b4d1b] to-[#0f290f]">
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
-        {/* Settings Icon in Header */}
-        <div className="flex justify-end mb-4">
+        {/* Header Icons */}
+        <div className="flex justify-end gap-2 mb-4">
+          <Link href="/analytics">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20"
+              aria-label="Estadísticas"
+            >
+              <BarChart3 className="h-5 w-5 text-white" />
+            </Button>
+          </Link>
           <SettingsModal
             settings={settings}
             updateSettings={updateSettings}
@@ -255,7 +400,7 @@ export default function Game() {
             <PlayerForm addPlayer={addPlayer} />
             <ScoreBoard
               players={players}
-              submitScore={submitScore}
+              submitRound={submitRound}
               deletePlayer={deletePlayer}
               resetGame={resetGame}
               rejoinPlayer={rejoinPlayer}
