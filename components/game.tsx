@@ -9,10 +9,18 @@ import Confetti from "react-confetti";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { X, Sparkles, Megaphone } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  getLatestUndismissedUpdate,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { X, Megaphone, ArrowUpRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  getUndismissedUpdates,
   dismissUpdate,
   type UpdateMessage,
 } from "@/lib/updates";
@@ -79,7 +87,7 @@ export default function Game() {
   const [matchHistory, setMatchHistory] = useState<Match[]>([]);
 
   // Update notification state
-  const [currentUpdate, setCurrentUpdate] = useState<UpdateMessage | null>(null);
+  const [updates, setUpdates] = useState<UpdateMessage[]>([]);
 
   const { width, height } = useWindowSize();
 
@@ -114,10 +122,10 @@ export default function Game() {
     }
   }, []);
 
-  // Load update notification after hydration
+  // Load update notifications after hydration
   useEffect(() => {
     if (isHydrated) {
-      setCurrentUpdate(getLatestUndismissedUpdate());
+      setUpdates(getUndismissedUpdates(true)); // Only show updates marked for main page
     }
   }, [isHydrated]);
 
@@ -132,11 +140,9 @@ export default function Game() {
     };
   }, []);
 
-  const handleDismissUpdate = () => {
-    if (currentUpdate) {
-      dismissUpdate(currentUpdate.id);
-      setCurrentUpdate(getLatestUndismissedUpdate());
-    }
+  const handleDismissUpdate = (updateId: string) => {
+    dismissUpdate(updateId);
+    setUpdates(getUndismissedUpdates(true));
   };
 
   // Save state to localStorage whenever it changes
@@ -385,44 +391,80 @@ export default function Game() {
           </p>
         </div>
 
-        {/* Update Notification */}
-        {currentUpdate && (
-          <Card className="mb-6 bg-amber-900/40 border-amber-600/50 backdrop-blur-sm animate-fade-in">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="text-amber-100 font-medium text-sm sm:text-base mb-1">
-                    {currentUpdate.title}
-                  </h3>
-                  <p className="text-amber-200/90 text-sm mb-3">
-                    {currentUpdate.content}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
+        {/* Update Notifications Carousel */}
+        {updates.length > 0 && (
+          <Card className="mb-6 bg-indigo-950/60 border-indigo-500/40 backdrop-blur-sm animate-fade-in overflow-hidden">
+            <Carousel opts={{ loop: true }} className="w-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-white text-lg font-bold flex items-center gap-2">
+                      <Megaphone className="h-5 w-5 text-indigo-400" />
+                      Novedades
+                    </CardTitle>
                     <Button
                       variant="link"
                       size="sm"
-                      className="h-auto p-0 text-amber-300 hover:text-amber-200 gap-1"
+                      className="h-auto p-0 text-indigo-400 hover:text-indigo-200 text-xs"
                       asChild
                     >
-                      <Link href="/announcements">
-                        <Megaphone className="h-3 w-3" />
-                        Ver todas las novedades
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleDismissUpdate}
-                      className="h-auto px-2 py-1 text-orange-300/60 hover:text-orange-100 hover:bg-orange-500/10 gap-1"
-                    >
-                      <X className="h-3 w-3" />
-                      Descartar mensaje
+                      <Link href="/announcements" className="flex items-center gap-0">
+                          Ver todas <ArrowUpRight/>
+                        </Link>
                     </Button>
                   </div>
+                  {updates.length > 1 && (
+                    <div className="flex items-center gap-1">
+                      <CarouselPrevious className="static translate-y-0 h-7 w-7 bg-transparent border-indigo-500/40 text-indigo-300 hover:bg-indigo-800/50 hover:text-indigo-100" />
+                      <CarouselNext className="static translate-y-0 h-7 w-7 bg-transparent border-indigo-500/40 text-indigo-300 hover:bg-indigo-800/50 hover:text-indigo-100" />
+                    </div>
+                  )}
                 </div>
-              </div>
-            </CardContent>
+              </CardHeader>
+              <CardContent className="px-6 pb-2">
+                <CarouselContent className="-ml-0">
+                  {updates.map((update) => (
+                    <CarouselItem key={update.id} className="pl-0">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={
+                              update.type === "preview"
+                                ? "border-pink-500/50 bg-pink-500/20 text-pink-300"
+                                : update.type === "fix"
+                                ? "border-blue-500/50 bg-blue-500/20 text-blue-300"
+                                : "border-purple-500/50 bg-purple-500/20 text-purple-300"
+                            }
+                          >
+                            {update.type === "preview"
+                              ? "Preview"
+                              : update.type === "fix"
+                              ? "Corrección"
+                              : "Nueva función"}
+                          </Badge>
+                          <h3 className="text-white font-semibold text-base">
+                            {update.title}
+                          </h3>
+                        </div>
+                        <p className="text-indigo-200/90 text-sm leading-relaxed">
+                          {update.content}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDismissUpdate(update.id)}
+                          className="h-auto px-2 py-1 text-indigo-400/60 hover:text-indigo-200 hover:bg-indigo-500/10 gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Descartar mensaje
+                        </Button>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </CardContent>
+            </Carousel>
           </Card>
         )}
 

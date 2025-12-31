@@ -82,9 +82,13 @@ export function dismissUpdate(id: string): void {
   }
 }
 
-export function getUndismissedUpdates(): UpdateMessage[] {
+export function getUndismissedUpdates(mainPageOnly = false): UpdateMessage[] {
   const dismissed = getDismissedUpdates();
-  return UPDATES.filter((update) => !dismissed.includes(update.id));
+  return UPDATES.filter(
+    (update) =>
+      !dismissed.includes(update.id) &&
+      (!mainPageOnly || update.showOnMainPage)
+  );
 }
 
 export function getLatestUndismissedUpdate(): UpdateMessage | null {
