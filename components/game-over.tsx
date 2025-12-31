@@ -1,21 +1,40 @@
+"use client";
+
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Trophy, ArrowLeft, RotateCcw } from 'lucide-react'
+import { Trophy, ArrowLeft, RotateCcw, Users } from 'lucide-react'
 
 interface Player {
+  id: string
   name: string
   score: number
+  roundTotal: number
+  rejoinCount: number
+  isEliminated: boolean
+  rejoinedThisRound: boolean
 }
 
 interface GameOverProps {
   winner: Player | null
   players: Player[]
-  resetGame: () => void
+  resetGame: (keepPlayers?: boolean) => void
   returnToGame: () => void
+  restartWithSamePlayersDefault: boolean
 }
 
-export function GameOver({ winner, players, resetGame, returnToGame }: GameOverProps) {
+export function GameOver({ winner, players, resetGame, returnToGame, restartWithSamePlayersDefault }: GameOverProps) {
+  const [keepSamePlayers, setKeepSamePlayers] = useState(restartWithSamePlayersDefault);
   const sortedPlayers = [...players].sort((a, b) => a.score - b.score);
+
+  // Update checkbox when settings change
+  useEffect(() => {
+    setKeepSamePlayers(restartWithSamePlayersDefault);
+  }, [restartWithSamePlayersDefault]);
+
+  const handleReset = () => {
+    resetGame(keepSamePlayers);
+  };
 
   return (
     <Card className="max-w-md mx-auto bg-white/10 backdrop-blur-sm border-green-500 animate-fade-in">
@@ -33,25 +52,46 @@ export function GameOver({ winner, players, resetGame, returnToGame }: GameOverP
             Puntuaciones finales:
           </h3>
           <ul className="space-y-2 sm:space-y-3">
-            {sortedPlayers.map((player, index) => (
+            {sortedPlayers.map((player) => (
               <li 
-                key={index} 
+                key={player.id} 
                 className={`p-2 sm:p-3 rounded-lg transition-all duration-200 ${
-                  player === winner 
+                  player.id === winner?.id 
                     ? 'bg-green-500/20 text-green-400 font-bold scale-105' 
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                <span className="text-base sm:text-lg break-words">
-                  {player.name}: {player.score} puntos
-                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-base sm:text-lg break-words">
+                    {player.name}: {player.score} puntos
+                  </span>
+                  {player.rejoinCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-amber-500/80 text-white rounded-full">
+                      {player.rejoinCount}x
+                    </span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         </div>
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-3 sm:space-y-4">
+          {/* Checkbox for keeping same players */}
+          <label className="flex items-center justify-center gap-3 cursor-pointer p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+            <input
+              type="checkbox"
+              checked={keepSamePlayers}
+              onChange={(e) => setKeepSamePlayers(e.target.checked)}
+              className="w-5 h-5 rounded border-2 border-white/30 bg-transparent checked:bg-green-500 checked:border-green-500 cursor-pointer accent-green-500"
+            />
+            <span className="text-white flex items-center gap-2 text-sm sm:text-base">
+              <Users className="h-4 w-4" />
+              Reiniciar con mismos jugadores
+            </span>
+          </label>
+
           <Button 
-            onClick={resetGame}
+            onClick={handleReset}
             className="bg-green-600 hover:bg-green-700 text-white w-full flex items-center justify-center gap-2 transition-all duration-200 text-sm sm:text-base py-2 h-auto"
           >
             <RotateCcw className="h-4 w-4" />

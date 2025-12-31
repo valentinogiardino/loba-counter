@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,23 +16,31 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface Player {
+  id: string;
   name: string;
   score: number;
   roundTotal: number;
+  rejoinCount: number;
+  isEliminated: boolean;
+  rejoinedThisRound: boolean;
 }
 
 interface ScoreBoardProps {
   players: Player[];
-  submitScore: (index: number, points: number) => void;
+  submitRound: (pointsArray: number[]) => void;
   deletePlayer: (index: number) => void;
   resetGame: () => void;
+  rejoinPlayer: (index: number) => void;
+  allowRejoin: boolean;
 }
 
 export function ScoreBoard({
   players,
-  submitScore,
+  submitRound,
   deletePlayer,
   resetGame,
+  rejoinPlayer,
+  allowRejoin,
 }: ScoreBoardProps) {
   const [points, setPoints] = useState<string[]>(() =>
     Array(players.length).fill("")
@@ -51,9 +59,11 @@ export function ScoreBoard({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    players.forEach((_, index) => {
-      submitScore(index, parseInt(points[index]) || 0);
-    });
+    
+    // Collect all scores and submit as a single round
+    const allScores = players.map((_, index) => parseInt(points[index]) || 0);
+    submitRound(allScores);
+    
     setPoints(new Array(players.length).fill(""));
 
     // Only focus on desktop
@@ -105,9 +115,9 @@ export function ScoreBoard({
           <div className="space-y-3 sm:space-y-4">
             {players.map((player, index) => (
               <Card
-                key={index}
+                key={player.id}
                 className={`backdrop-blur-sm ${
-                  player.score >= 101
+                  player.isEliminated
                     ? "bg-red-500/10 border-red-500"
                     : "bg-white/10 border-white/20"
                 }`}
@@ -129,41 +139,64 @@ export function ScoreBoard({
                       </span>
                     </div>
                     <div className="flex-grow min-w-0">
-                      <span className="text-base sm:text-lg font-semibold text-white block truncate">
-                        {player.name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base sm:text-lg font-semibold text-white block truncate">
+                          {player.name}
+                        </span>
+                        {player.rejoinCount > 0 && (
+                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-amber-500/80 text-white rounded-full">
+                            {player.rejoinCount}x
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => adjustPoints(index, -1)}
-                      className="h-8 w-8 sm:h-10 sm:w-10 bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
-                    >
-                      <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                    </Button>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Input
-                        type="number"
-                        name={`points-${index}`}
-                        value={points[index] || ""}
-                        onChange={(e) =>
-                          handlePointChange(index, e.target.value)
-                        }
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        placeholder="0"
-                        className="w-12 h-8 sm:h-10 text-sm sm:text-base text-center bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => adjustPoints(index, 1)}
-                      className="h-8 w-8 sm:h-10 sm:w-10 bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
-                    >
-                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                    </Button>
+                    
+                    {/* Show Rejoin button for eliminated players if rejoin is allowed */}
+                    {player.isEliminated && allowRejoin ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => rejoinPlayer(index)}
+                        className="h-8 sm:h-10 px-2 sm:px-3 bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/50 text-white text-xs sm:text-sm"
+                      >
+                        <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        Reengancharse
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => adjustPoints(index, -1)}
+                          className="h-8 w-8 sm:h-10 sm:w-10 bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+                        >
+                          <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                        </Button>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Input
+                            type="number"
+                            name={`points-${index}`}
+                            value={points[index] || ""}
+                            onChange={(e) =>
+                              handlePointChange(index, e.target.value)
+                            }
+                            onKeyDown={(e) => handleKeyDown(e, index)}
+                            placeholder="0"
+                            className="w-12 h-8 sm:h-10 text-sm sm:text-base text-center bg-white/90 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => adjustPoints(index, 1)}
+                          className="h-8 w-8 sm:h-10 sm:w-10 bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
+                        >
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
