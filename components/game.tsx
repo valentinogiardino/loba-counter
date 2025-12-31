@@ -4,13 +4,18 @@ import { useState, useEffect } from "react";
 import { PlayerForm } from "./player-form";
 import { ScoreBoard } from "./score-board";
 import { GameOver } from "./game-over";
-import { SettingsModal } from "./settings-modal";
 import { globalStyles } from "./global-styles";
 import Confetti from "react-confetti";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BarChart3 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { X, Sparkles, Megaphone } from "lucide-react";
+import {
+  getLatestUndismissedUpdate,
+  dismissUpdate,
+  type UpdateMessage,
+} from "@/lib/updates";
 
 interface Player {
   id: string;
@@ -73,6 +78,9 @@ export default function Game() {
   const [rounds, setRounds] = useState<Round[]>([]);
   const [matchHistory, setMatchHistory] = useState<Match[]>([]);
 
+  // Update notification state
+  const [currentUpdate, setCurrentUpdate] = useState<UpdateMessage | null>(null);
+
   const { width, height } = useWindowSize();
 
   // Load state from localStorage on mount
@@ -105,6 +113,31 @@ export default function Game() {
       setIsHydrated(true);
     }
   }, []);
+
+  // Load update notification after hydration
+  useEffect(() => {
+    if (isHydrated) {
+      setCurrentUpdate(getLatestUndismissedUpdate());
+    }
+  }, [isHydrated]);
+
+  // Listen for settings changes from sidebar
+  useEffect(() => {
+    const handleSettingsChange = (e: CustomEvent<GameSettings>) => {
+      setSettings(e.detail);
+    };
+    window.addEventListener("settings-changed", handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener("settings-changed", handleSettingsChange as EventListener);
+    };
+  }, []);
+
+  const handleDismissUpdate = () => {
+    if (currentUpdate) {
+      dismissUpdate(currentUpdate.id);
+      setCurrentUpdate(getLatestUndismissedUpdate());
+    }
+  };
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -276,31 +309,6 @@ export default function Game() {
     setWinner(null);
   };
 
-  const restartWithSamePlayers = () => {
-    if (lastPlayers.length > 0) {
-      const resetPlayers = lastPlayers.map((player) => ({
-        id: crypto.randomUUID(),
-        name: player.name,
-        score: 0,
-        roundTotal: 0,
-        rejoinCount: 0,
-        isEliminated: false,
-        rejoinedThisRound: false,
-      }));
-      setPlayers(resetPlayers);
-      // Start new match
-      setMatchId(crypto.randomUUID());
-      setMatchStartedAt(Date.now());
-      setRounds([]);
-      setGameOver(false);
-      setWinner(null);
-    }
-  };
-
-  const updateSettings = (newSettings: Partial<GameSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
-
   const returnToGame = () => {
     setGameOver(false);
   };
@@ -358,25 +366,6 @@ export default function Game() {
   return (
     <div className="min-h-screen bg-[#1b4d1b] bg-gradient-to-b from-[#1b4d1b] to-[#0f290f]">
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
-        {/* Header Icons */}
-        <div className="flex justify-end gap-2 mb-4">
-          <Link href="/analytics">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20"
-              aria-label="Estadísticas"
-            >
-              <BarChart3 className="h-5 w-5 text-white" />
-            </Button>
-          </Link>
-          <SettingsModal
-            settings={settings}
-            updateSettings={updateSettings}
-            hasLastPlayers={lastPlayers.length > 0}
-            restartWithSamePlayers={restartWithSamePlayers}
-          />
-        </div>
         <div className="text-center space-y-4 sm:space-y-6 md:space-y-8 mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-glow animate-fade-in">
             Contador de Loba
@@ -395,6 +384,48 @@ export default function Game() {
             La suerte está echada...
           </p>
         </div>
+
+        {/* Update Notification */}
+        {currentUpdate && (
+          <Card className="mb-6 bg-amber-900/40 border-amber-600/50 backdrop-blur-sm animate-fade-in">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-amber-100 font-medium text-sm sm:text-base mb-1">
+                    {currentUpdate.title}
+                  </h3>
+                  <p className="text-amber-200/90 text-sm mb-3">
+                    {currentUpdate.content}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-amber-300 hover:text-amber-200 gap-1"
+                      asChild
+                    >
+                      <Link href="/announcements">
+                        <Megaphone className="h-3 w-3" />
+                        Ver todas las novedades
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDismissUpdate}
+                      className="h-auto px-2 py-1 text-orange-300/60 hover:text-orange-100 hover:bg-orange-500/10 gap-1"
+                    >
+                      <X className="h-3 w-3" />
+                      Descartar mensaje
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {!gameOver ? (
           <div className="space-y-6">
             <PlayerForm addPlayer={addPlayer} />

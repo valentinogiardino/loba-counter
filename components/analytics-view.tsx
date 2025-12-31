@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { MatchHistoryCard } from "./match-history-card";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Trophy,
   Target,
   RotateCcw,
   Users,
   TrendingUp,
   Calendar,
+  FlaskConical,
 } from "lucide-react";
 
 interface Player {
@@ -135,21 +136,22 @@ export default function AnalyticsView() {
     <div className="min-h-screen bg-[#1b4d1b] bg-gradient-to-b from-[#1b4d1b] to-[#0f290f]">
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/">
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-white/10 flex items-center gap-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Volver al Juego
-            </Button>
-          </Link>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">
             Estadísticas
           </h1>
-          <div className="w-[120px]" /> {/* Spacer for centering */}
         </div>
+
+        {/* Experimental Feature Alert */}
+        <div className="flex justify-center mb-6">
+            <Alert variant="warning">
+                <FlaskConical className="h-4 w-4" />
+                <AlertTitle>
+                    Esta función está en desarrollo experimental. Algunas características pueden cambiar o mejorar con el tiempo.
+                </AlertTitle>
+            </Alert>
+        </div>
+
 
         {totalMatches === 0 ? (
           <Card className="bg-white/10 backdrop-blur-sm border-white/20">
