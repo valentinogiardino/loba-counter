@@ -66,9 +66,9 @@ export function MatchHistoryCard({ match }: MatchHistoryCardProps) {
         <Button
           variant="ghost"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full p-4 h-auto flex items-center justify-between hover:bg-white/5 rounded-none"
+          className="w-full p-4 h-auto flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-white/5 rounded-none gap-3"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between w-full sm:w-auto">
             <div className="flex flex-col items-start">
               <span className="text-xs text-white/50">
                 {formatDate(match.startedAt)}
@@ -80,14 +80,21 @@ export function MatchHistoryCard({ match }: MatchHistoryCardProps) {
                 </span>
               </div>
             </div>
+            <div className="sm:hidden">
+              {isExpanded ? (
+                <ChevronUp className="h-5 w-5 text-white/50" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-white/50" />
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-xs text-white/50">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="flex-1 text-left sm:text-right">
+              <div className="text-xs text-white/50 mb-1">
                 {match.players.length} jugadores · {match.rounds.length} rondas
               </div>
-              <div className="flex gap-2 justify-end mt-1">
+              <div className="flex gap-2 flex-wrap justify-start sm:justify-end">
                 {sortedPlayers.slice(0, 3).map((player) => (
                   <span
                     key={player.id}
@@ -102,11 +109,13 @@ export function MatchHistoryCard({ match }: MatchHistoryCardProps) {
                 ))}
               </div>
             </div>
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-white/50" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-white/50" />
-            )}
+            <div className="hidden sm:block">
+              {isExpanded ? (
+                <ChevronUp className="h-5 w-5 text-white/50" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-white/50" />
+              )}
+            </div>
           </div>
         </Button>
 
