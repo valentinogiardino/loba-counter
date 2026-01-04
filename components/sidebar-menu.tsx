@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: GameSettings = {
 export function SidebarMenu() {
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem("loba-counter-settings");
@@ -40,6 +41,10 @@ export function SidebarMenu() {
     setIsHydrated(true);
   }, []);
 
+  const handleNavClick = () => {
+    setIsOpen(false);
+  };
+
   const updateSettings = (newSettings: Partial<GameSettings>) => {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
@@ -49,7 +54,7 @@ export function SidebarMenu() {
   };
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -77,7 +82,7 @@ export function SidebarMenu() {
               Navegación
             </h3>
             <nav className="space-y-1">
-              <Link href="/">
+              <Link href="/" onClick={handleNavClick}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
@@ -86,7 +91,7 @@ export function SidebarMenu() {
                   Inicio
                 </Button>
               </Link>
-              <Link href="/announcements">
+              <Link href="/announcements" onClick={handleNavClick}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
@@ -95,7 +100,7 @@ export function SidebarMenu() {
                   Novedades
                 </Button>
               </Link>
-              <Link href="/analytics">
+              <Link href="/analytics" onClick={handleNavClick}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
