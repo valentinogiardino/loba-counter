@@ -26,7 +26,7 @@ export const UPDATES: UpdateMessage[] = [
       content:
         "A pedido de la gente (y especialmente de Luján 😅), ahora se pueden manejar y contar los reenganches. ¡Que no se corte el juego en este 2026!",
       type: "feature",
-      showOnMainPage: true,
+      showOnMainPage: false,
     },
     {
       id: "analytics-2026",
@@ -35,7 +35,7 @@ export const UPDATES: UpdateMessage[] = [
       content:
         "Estamos probando una nueva sección de estadísticas con historial de partidas y ranking de jugadores. Es una vista previa: todavía está en desarrollo, pero ya podés ir chusmeando quién viene ganando 😎",
       type: "preview",
-      showOnMainPage: true,
+      showOnMainPage: false,
     },
     {
         id: "sidebar-2026",
